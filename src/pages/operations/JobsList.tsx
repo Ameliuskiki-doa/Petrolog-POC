@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, CalendarPlus, ClipboardCheck, Plus, Repeat, ShieldCheck } from 'lucide-react'
 import { Badge, Button, Callout, Card, CardHeader, DataTable, Drawer, FormField, Grid, Input, Modal, PageHeader, ProjectCodeChip, SearchInput, Select, Stat, StatusBadge, type Column } from '@/components/ui'
 import { getProject, projects, type Job, type JobStatus } from '@/data/core'
-import { jobMeta, recurringSchedules } from '@/data/operations'
+import { jobHoldIssues, recurringSchedules } from '@/data/operations'
 import { date, idr, idrShort, num, TODAY_ISO } from '@/lib/format'
 import { useToast } from '@/lib/app-state'
 import { addJobs, LIFECYCLE, nextJobId, useJobs, type JobState } from './store'
@@ -112,8 +112,7 @@ export default function JobsList() {
           />
           <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
             {held.map((j) => {
-              const m = jobMeta(j)
-              const issues = m.held ?? []
+              const issues = jobHoldIssues(j)
               return (
                 <button key={j.id} onClick={() => nav(`/ops/jobs/${j.id}`)} className="rounded-lg border border-slate-200 bg-white p-3 text-left transition hover:border-amber-400 hover:shadow">
                   <div className="flex items-center justify-between gap-2">

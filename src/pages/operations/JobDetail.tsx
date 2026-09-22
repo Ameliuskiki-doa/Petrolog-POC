@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { AlertTriangle, ArrowRight, CheckCircle2, CloudOff, FileText, MapPin, RotateCcw, Send, ShieldCheck, Smartphone, XCircle } from 'lucide-react'
 import { Badge, Button, Callout, Card, CardHeader, DataTable, DescList, EmptyState, Grid, Modal, PageHeader, ProjectCodeChip, Stat, StatusBadge, Stepper, Tabs, Timeline, cx, type Column, type Tone } from '@/components/ui'
 import { getCustomer, getProject, getUnit } from '@/data/core'
-import { allocations, certState, chargeAmount, fuelEntries, getPerson, jobCharges, jobCheckins, jobDocuments, jobMeta, licenceState, personName, timesheets, type JobCharge, type JobDoc, type TimesheetEntry } from '@/data/operations'
+import { allocations, certState, chargeAmount, fuelEntries, getPerson, jobCharges, jobCheckins, jobDocuments, jobHoldIssues, jobMeta, licenceState, pendingTimesheets, personName, timesheets, type JobCharge, type JobDoc, type TimesheetEntry } from '@/data/operations'
 import { date, dateTime, idr, idrShort, num } from '@/lib/format'
 import { useToast } from '@/lib/app-state'
 import { LIFECYCLE, updateJob, useJobs, type JobState } from './store'
@@ -34,7 +34,8 @@ export default function JobDetail() {
   const checkins = jobCheckins(job)
   const ts = timesheets.filter((t) => t.jobId === job.id)
   const fuel = fuelEntries.filter((f) => f.jobId === job.id && f.status !== 'Duplicate — merged')
-  const issues = job.status === 'Completed' ? (meta.held ?? []) : []
+  const issues = job.status === 'Completed' ? jobHoldIssues(job) : []
+  const tsPending = pendingTimesheets(job.id).length
 
   // Cost & revenue that flow on verification
   const labour = ts.reduce((a, t) => a + t.hours * hourlyCost(t.employeeId) * (t.category === 'Overtime' ? 1.5 : 1), 0)
@@ -45,10 +46,10 @@ export default function JobDetail() {
   const verifiedLike = job.status === 'Verified' || job.status === 'Billed'
 
   const checks: { label: string; ok: boolean }[] = [
-    { label: `POD complete (${docs.filter((d) => d.kind !== 'Lift plan').length} documents incl. signature)`, ok: docs.some((d) => d.kind === 'Signature') && !issues.some((i) => /sign-off|photo|ticket/i.test(i)) },
+    { label: `POD complete (${docs.filter((d) => d.kind !== 'Lift plan').length} documents incl. signature)`, ok: docs.some((d) => d.kind === 'Signature') && !issues.some((i) => /sign-off|signature|POD|delivery note/i.test(i)) },
     { label: 'Geofence arrival & departure stamps present', ok: checkins.length >= 4 },
     { label: 'Quantity reconciled with weighbridge / client measure', ok: !issues.some((i) => /tonnage|weighbridge/i.test(i)) },
-    { label: `Timesheets approved by field supervisor (${ts.filter((t) => t.status === 'Approved' || t.status === 'Supervisor Approved').length}/${ts.length})`, ok: !issues.some((i) => /timesheet/i.test(i)) },
+    { label: `Timesheets approved by field supervisor (${ts.length - tsPending}/${ts.length})`, ok: tsPending === 0 && !issues.some((i) => /timesheet/i.test(i)) },
     { label: 'Charges outside base rate carry receipts where required', ok: !issues.some((i) => /receipt/i.test(i)) },
   ]
 

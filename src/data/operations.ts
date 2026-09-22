@@ -694,3 +694,21 @@ export const payrollCharging: { employeeId: string; gross: number; hours: { proj
   { employeeId: 'EMP-0019', gross: 19_250_000, hours: [{ projectCode: 'PS-2028-003', hrs: 224 }] },
   { employeeId: 'EMP-0021', gross: 19_600_000, hours: [{ projectCode: 'GS-2027-008', hrs: 132 }, { projectCode: 'GS-2028-001', hrs: 44 }] },
 ]
+
+const TS_APPROVED: TimesheetStatus[] = ['Supervisor Approved', 'Approved']
+
+/** Timesheets on a job that the field supervisor has not yet approved */
+export function pendingTimesheets(jobId: string): TimesheetEntry[] {
+  return timesheets.filter((t) => t.jobId === jobId && !TS_APPROVED.includes(t.status))
+}
+
+/**
+ * Reasons a Completed job is held at the verification gate: the recorded field issues plus
+ * any timesheets still awaiting supervisor approval (so the gate and the jobs list agree).
+ */
+export function jobHoldIssues(j: Job): string[] {
+  const held = jobMeta(j).held ?? []
+  const pending = pendingTimesheets(j.id).length
+  const tsIssue = pending && !held.some((i) => /timesheet/i.test(i)) ? [`${pending} timesheet${pending > 1 ? 's' : ''} awaiting field supervisor approval`] : []
+  return [...held, ...tsIssue]
+}
