@@ -14,8 +14,10 @@ import {
   type Item, type Movement, type MovementType, type StockCount,
 } from '@/data/supporting'
 import { Person, RefLink } from './shared'
+import { FuelPointsTab } from './FuelPointsTab'
+import { fuelPoints } from '@/data/fuelPoints'
 
-type TabKey = 'items' | 'warehouses' | 'movements' | 'counts'
+type TabKey = 'items' | 'warehouses' | 'fuelpoints' | 'movements' | 'counts'
 
 export default function Inventory() {
   const toast = useToast()
@@ -145,6 +147,7 @@ export default function Inventory() {
         tabs={[
           { key: 'items', label: 'Items', count: itemList.length },
           { key: 'warehouses', label: 'Stock by warehouse', count: warehouses.length },
+          { key: 'fuelpoints', label: 'Fuel points', count: fuelPoints.length },
           { key: 'movements', label: 'Movements', count: moves.length },
           { key: 'counts', label: 'Stock count', count: counts.length },
         ]}
@@ -227,6 +230,8 @@ export default function Inventory() {
           </Card>
         </div>
       )}
+
+      {tab === 'fuelpoints' && <FuelPointsTab fuel={fuel} />}
 
       {tab === 'movements' && (
         <Card padded={false}>

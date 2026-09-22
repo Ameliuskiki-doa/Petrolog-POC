@@ -127,7 +127,6 @@ export const timesheetHistory: TimesheetDay[] = [
 ]
 
 // ─── Fuel ─────────────────────────────────────────────────────────────────────
-export const fuelStations = ['Pit 3 fuel station (FS-03)', 'Mobile fuel truck FT-02', 'Jetty fuel point (FS-05)'] as const
 
 export interface FuelRecord {
   at: string
@@ -141,7 +140,7 @@ export interface FuelRecord {
 export const fuelHistory: FuelRecord[] = [
   { at: '2028-03-09T05:41:00', station: 'Pit 3 fuel station (FS-03)', litres: 212, odometer: 246_880, projectCode: 'HL-2027-014.01', channel: 'Mobile app' },
   { at: '2028-03-08T05:37:00', station: 'Pit 3 fuel station (FS-03)', litres: 205, odometer: 246_402, projectCode: 'HL-2027-014.01', channel: 'Fuel card' },
-  { at: '2028-03-07T05:50:00', station: 'Mobile fuel truck FT-02', litres: 218, odometer: 245_921, projectCode: 'HL-2027-014.01', channel: 'Mobile app' },
+  { at: '2028-03-07T05:50:00', station: 'Mobile fuel truck (FT-02)', litres: 218, odometer: 245_921, projectCode: 'HL-2027-014.01', channel: 'Mobile app' },
 ]
 export const lastOdometer = 246_880
 

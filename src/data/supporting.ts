@@ -23,6 +23,7 @@ export const warehouses: Warehouse[] = [
   { id: 'WH-KTI', name: 'Kutai Pit 3 Site Store', kind: 'Site store', location: 'Kutai Kartanegara', keeperId: 'EMP-0006', defaultCode: 'HL-2027-014' },
   { id: 'WH-CLP', name: 'Cilacap Turnaround Store', kind: 'Site store', location: 'Cilacap', keeperId: 'EMP-0029', defaultCode: 'PS-2028-003' },
   { id: 'TNK-KTI-01', name: 'Kutai Fuel Tank T-01 (HSD)', kind: 'Fuel tank', location: 'Kutai Kartanegara', keeperId: 'EMP-0006', defaultCode: 'HL-2027-014.01', capacity: '50,000 L' },
+  { id: 'TNK-JTY-01', name: 'Tanjung Jetty Fuel Tank (HSD)', kind: 'Fuel tank', location: 'Kutai Kartanegara', keeperId: 'EMP-0006', defaultCode: 'HL-2027-014.01', capacity: '20,000 L' },
   { id: 'TNK-BPN-01', name: 'Balikpapan Yard Fuel Tank (HSD)', kind: 'Fuel tank', location: 'Balikpapan Ops', keeperId: 'EMP-0024', defaultCode: 'GEN-BPN', capacity: '30,000 L' },
 ]
 
@@ -53,7 +54,7 @@ export const items: Item[] = [
   { id: 'ITM-10074', name: 'Turbocharger assy — Volvo D13', category: 'Spare Parts', uom: 'pcs', avgCost: 38_900_000, reorderPoint: 0, partNo: 'VOE 22479125', fits: 'PM-01, PM-03', stock: { 'WH-BPN': 0 } },
   { id: 'ITM-20011', name: 'Engine oil SAE 15W-40 (drum 209 L)', category: 'Lubricants', uom: 'drum', avgCost: 9_650_000, reorderPoint: 6, fits: 'Fleet', stock: { 'WH-BPN': 11, 'WH-KTI': 4, 'WH-CLP': 1 } },
   { id: 'ITM-20014', name: 'Hydraulic oil ISO VG 46 (drum 209 L)', category: 'Lubricants', uom: 'drum', avgCost: 8_900_000, reorderPoint: 4, fits: 'Cranes, excavator', stock: { 'WH-BPN': 6, 'WH-KTI': 2 } },
-  { id: 'ITM-30001', name: 'HSD / B40 biodiesel', category: 'Fuel', uom: 'L', avgCost: 13_700, reorderPoint: 15_000, fits: 'Fleet', stock: { 'TNK-KTI-01': 31_640, 'TNK-BPN-01': 12_880 } },
+  { id: 'ITM-30001', name: 'HSD / B40 biodiesel', category: 'Fuel', uom: 'L', avgCost: 13_700, reorderPoint: 15_000, fits: 'Fleet', stock: { 'TNK-KTI-01': 31_640, 'TNK-JTY-01': 8_450, 'TNK-BPN-01': 12_880 } },
   { id: 'ITM-40002', name: 'Tyre 12.00R24 (mining lug)', category: 'Tyres', uom: 'pcs', avgCost: 7_950_000, reorderPoint: 8, fits: 'Dump truck fleet', stock: { 'WH-BPN': 6, 'WH-KTI': 4 } },
   { id: 'ITM-50010', name: 'Ceramic support balls 1/4" (bag 25 kg)', category: 'Consumables', uom: 'bag', avgCost: 1_850_000, reorderPoint: 40, fits: 'Catalyst loading', stock: { 'WH-CLP': 64 } },
   { id: 'ITM-50014', name: 'Nitrogen-rated breathing air hose 30 m', category: 'Consumables', uom: 'pcs', avgCost: 4_200_000, reorderPoint: 6, fits: 'Catalyst loading (inert entry)', stock: { 'WH-CLP': 8 } },

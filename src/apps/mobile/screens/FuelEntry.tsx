@@ -1,25 +1,28 @@
 import { useMemo, useState } from 'react'
-import { Save, CreditCard, Smartphone, Satellite, Gauge } from 'lucide-react'
+import { Save, CreditCard, Smartphone, Satellite, Gauge, MapPin, LocateFixed } from 'lucide-react'
 import { cx } from '@/components/ui'
 import { num } from '@/lib/format'
-import { fuelStations, sites, DRIVER_UNIT } from '@/data/mobile'
-import { useMobile, useSaved, gpsFix, stamp } from '../store'
-import { MHeader, Section, Panel, BigButton, MLabel, MInput, Locked, Choice } from '../kit'
+import { sites, DRIVER_UNIT } from '@/data/mobile'
+import { fuelPointLabel, nearbyFuelPoints } from '@/data/fuelPoints'
+import { useMobile, useSaved, gpsFix, fmtGeo, stamp } from '../store'
+import { MHeader, Section, Panel, BigButton, MLabel, MInput, Locked } from '../kit'
 import { CameraCapture } from '../media'
 import { JobPicker, useDefaultJob } from '../helpers'
-
-type Station = (typeof fuelStations)[number]
 
 export default function FuelEntry() {
   const { fuel, update, record } = useMobile()
   const saved = useSaved()
   const [jobId, setJobId, a] = useDefaultJob()
-  const [station, setStation] = useState<Station>(fuelStations[0])
   const [litres, setLitres] = useState('')
   const [odo, setOdo] = useState('')
   const [photos, setPhotos] = useState<string[]>([])
   const [tried, setTried] = useState(false)
   const geo = useMemo(() => gpsFix(sites['Pit 3 ROM'].geo), [])
+  // Fuel points from Inventory master data, nearest first; the one whose geofence we're in is pre-selected
+  const nearby = useMemo(() => nearbyFuelPoints(geo), [geo])
+  const [stationId, setStationId] = useState(nearby[0]?.id ?? '')
+  const point = nearby.find((p) => p.id === stationId)
+  const station = point ? fuelPointLabel(point) : ''
 
   const last = fuel[0]
   const l = parseFloat(litres.replace(',', '.'))
@@ -28,7 +31,7 @@ export default function FuelEntry() {
   const oOk = !isNaN(o) && o > last.odometer && o < last.odometer + 2000
   const km = oOk ? o - last.odometer : 0
   const kmL = oOk && lOk ? km / l : 0
-  const ready = lOk && oOk && photos.length > 0 && !!a
+  const ready = lOk && oOk && photos.length > 0 && !!a && !!point
 
   function save() {
     setTried(true)
@@ -41,7 +44,7 @@ export default function FuelEntry() {
       title: `Fuel ${num(l, 1)} L — ${DRIVER_UNIT}`,
       detail: `${station} · odometer ${num(o)} km · pump photo`,
       sizeKb: 150 * photos.length + 2,
-      conflict: station.includes('FS-03')
+      conflict: point?.fuelCard && point.id === 'FS-03'
         ? `Matched fuel-card transaction FC-FS03-${String(o).slice(-4)} for the same fill (±3 min, same pump). Merged into one record — no double count; your pump photo kept as evidence.`
         : undefined,
     })
@@ -68,8 +71,38 @@ export default function FuelEntry() {
         )}
       </Section>
 
-      <Section title="Pump">
-        <Choice options={fuelStations} value={station} onChange={setStation} cols={2} />
+      <Section title="Fuel point">
+        <div className="mb-2 flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
+          <LocateFixed size={13} /> GPS {fmtGeo(geo)} · works offline
+        </div>
+        <div className="space-y-2">
+          {nearby.map((p) => {
+            const on = p.id === stationId
+            const km = p.distanceM < 1000 ? `${Math.round(p.distanceM)} m` : `${(p.distanceM / 1000).toFixed(1)} km`
+            return (
+              <button
+                key={p.id}
+                onClick={() => setStationId(p.id)}
+                className={cx('flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left', on ? 'border-ink-900 bg-ink-900 text-white' : 'border-slate-200 bg-white')}
+              >
+                <MapPin size={20} className={cx('shrink-0', on ? 'text-brand-400' : 'text-slate-400')} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-bold">{p.name} <span className={cx('font-mono text-[12px]', on ? 'text-slate-300' : 'text-slate-500')}>{p.id}</span></span>
+                  <span className={cx('block text-[12px]', on ? 'text-slate-300' : 'text-slate-500')}>
+                    {km} · {p.kind}
+                    {p.fuelCard && ' · card reader'}
+                  </span>
+                </span>
+                {p.inside && <span className="shrink-0 rounded-full bg-emerald-500 px-2 py-0.5 text-[11px] font-bold text-white">You are here</span>}
+              </button>
+            )
+          })}
+        </div>
+        {point && !point.inside && (
+          <div className="mt-2 rounded-xl bg-amber-100 px-3 py-2 text-[12px] font-bold text-amber-900">
+            You are outside this point&apos;s geofence — the entry will be flagged for review.
+          </div>
+        )}
       </Section>
 
       <Section title="Reading">
