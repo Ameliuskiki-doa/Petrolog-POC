@@ -5,11 +5,11 @@ import {
   Badge, Button, Callout, Card, CardHeader, DataTable, DescList, EmptyState, FormField, Input, PageHeader, Progress, ProjectCodeChip, StatusBadge, Tabs, Timeline,
 } from '@/components/ui'
 import { getContract, getEmployee, projects, remainingBudget, runningMargin, type Contract } from '@/data/core'
-import { contractExtras, correspondence, opportunities } from '@/data/commercial'
+import { correspondence } from '@/data/commercial'
 import { date, dateTime, daysUntil, idr, idrShort, num, pct, period, TODAY_ISO } from '@/lib/format'
 import { useToast } from '@/lib/app-state'
 import { BLTag, MODULE_CTR, TextLink, customerName } from './shared'
-import { contractStore, useContractState } from './store'
+import { contractStore, useContractExtras, useContractState, useDraftContracts, useOpps } from './store'
 import { thresholdBadge } from './Contracts'
 
 type TabKey = 'overview' | 'rates' | 'payment' | 'projects' | 'corr'
@@ -21,8 +21,11 @@ function rateOn(c: Contract, item: string, iso: string) {
 
 export default function ContractDetail() {
   const { id } = useParams()
-  const base = getContract(id)
+  const drafts = useDraftContracts()
+  const base = getContract(id) ?? drafts.find((d) => d.contract.id === id)?.contract
   const st = useContractState()
+  const extras = useContractExtras()
+  const opps = useOpps()
   const toast = useToast()
   const [tab, setTab] = useState<TabKey>('overview')
   const [lookup, setLookup] = useState(id === 'CTR-2027-011' ? '2027-12-15' : TODAY_ISO)
@@ -31,11 +34,12 @@ export default function ContractDetail() {
 
   const state = st[base.id] ?? { status: base.status }
   const c = { ...base, status: state.status }
-  const x = contractExtras[c.id]
-  const opp = opportunities.find((o) => o.contractId === c.id)
+  const x = extras[c.id]
+  const opp = opps.find((o) => o.contractId === c.id)
   const linked = projects.filter((p) => p.contractId === c.id)
   const corr = correspondence.filter((k) => k.bound.type === 'contract' && k.bound.id === c.id)
   const items = [...new Set(c.rateCard.map((r) => r.item))]
+  const isDraft = drafts.some((d) => d.contract.id === c.id)
   const pending = c.status === 'Pending Approval'
   const issuedNow = !!state.codeIssuedAt
 
@@ -64,7 +68,12 @@ export default function ContractDetail() {
       {issuedNow && (
         <div className="mb-4">
           <Callout tone="green" icon={<CheckCircle2 size={18} />} title={`Contract approved · project code ${c.projectCode} issued ${dateTime(state.codeIssuedAt!)}`}>
-            Rate card and period inherited. The code is now open for requisitions, jobs, timesheets and billing. <TextLink to={`/projects/${c.projectCode}`} mono={false}>Open project {c.projectCode} →</TextLink>
+            Rate card and period inherited. The code is now open for requisitions, jobs, timesheets and billing.{' '}
+            {isDraft ? (
+              <span className="text-emerald-800">Its P/L opens in Project Control once the first RAB version is approved.</span>
+            ) : (
+              <TextLink to={`/projects/${c.projectCode}`} mono={false}>Open project {c.projectCode} →</TextLink>
+            )}
           </Callout>
         </div>
       )}

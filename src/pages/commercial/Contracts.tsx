@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BellRing, CalendarClock, FileSignature, Hourglass, Wallet } from 'lucide-react'
-import { Badge, Card, CardHeader, DataTable, Grid, PageHeader, ProjectCodeChip, SearchInput, Select, Stat, StatusBadge, cx } from '@/components/ui'
-import { businessLines, contracts, type BusinessLine, type Contract } from '@/data/core'
-import { contractExtras, type CriticalDate } from '@/data/commercial'
+import { Badge, Button, Card, CardHeader, DataTable, Grid, PageHeader, ProjectCodeChip, SearchInput, Select, Stat, StatusBadge, cx } from '@/components/ui'
+import { businessLines, type BusinessLine, type Contract } from '@/data/core'
+import { type ContractExtra, type CriticalDate, type Opportunity } from '@/data/commercial'
 import { date, daysUntil, idrShort } from '@/lib/format'
 import { BLTag, MODULE_CTR, TextLink, customerName } from './shared'
-import { useContractState } from './store'
+import { useAllContracts, useContractExtras, useContractState, useOpps } from './store'
+import { RegisterContractDrawer } from './RegisterContractDrawer'
 
 export interface DateAlert extends CriticalDate {
   contract: Contract
@@ -16,11 +17,11 @@ export interface DateAlert extends CriticalDate {
 /** Notification thresholds (configurable per contract type — BDS-04) */
 export const THRESHOLDS = [90, 60, 30]
 
-export function criticalAlerts(list: Contract[], status: Record<string, { status: Contract['status'] }>): DateAlert[] {
+export function criticalAlerts(list: Contract[], status: Record<string, { status: Contract['status'] }>, extras: Record<string, ContractExtra>): DateAlert[] {
   return list
     .filter((c) => status[c.id]?.status !== 'Draft')
     .flatMap((c) =>
-      (contractExtras[c.id]?.criticalDates ?? [])
+      (extras[c.id]?.criticalDates ?? [])
         .filter((d) => d.kind !== 'Start')
         .map((d) => ({ ...d, contract: c, days: daysUntil(d.date) })),
     )
@@ -37,24 +38,39 @@ export function thresholdBadge(days: number) {
 
 export default function Contracts() {
   const st = useContractState()
+  const all = useAllContracts()
+  const opps = useOpps()
+  const [register, setRegister] = useState<Opportunity | null>(null)
+  const extras = useContractExtras()
   const nav = useNavigate()
   const [q, setQ] = useState('')
   const [bl, setBl] = useState('')
   const [status, setStatus] = useState('')
 
-  const list = contracts.map((c) => ({ ...c, status: st[c.id]?.status ?? c.status }))
+  const list = all.map((c) => ({ ...c, status: st[c.id]?.status ?? c.status }))
   const rows = list.filter((c) => (!bl || c.businessLine === bl) && (!status || c.status === status) && (!q || `${c.id} ${c.title} ${customerName(c.customerId)} ${c.projectCode}`.toLowerCase().includes(q.toLowerCase())))
   const active = list.filter((c) => c.status === 'Active')
-  const alerts = criticalAlerts(list, st)
+  const alerts = criticalAlerts(list, st, extras)
+  // A contract is registered from a won opportunity, never from a blank form (BDS-01)
+  const awaiting = opps.find((o) => o.stage === 'Won' && !o.contractId)
 
   const nextDate = (c: Contract) => {
-    const d = (contractExtras[c.id]?.criticalDates ?? []).filter((x) => x.kind !== 'Start' && daysUntil(x.date) >= 0).sort((a, b) => a.date.localeCompare(b.date))[0]
+    const d = (extras[c.id]?.criticalDates ?? []).filter((x) => x.kind !== 'Start' && daysUntil(x.date) >= 0).sort((a, b) => a.date.localeCompare(b.date))[0]
     return d
   }
 
   return (
     <>
-      <PageHeader module={MODULE_CTR} title="Contract repository" subtitle="Contracts with versioned amendments, effective-dated rate cards, payment terms and critical dates. Each active contract carries the project code(s) it issued." />
+      <PageHeader
+        module={MODULE_CTR}
+        title="Contract repository"
+        subtitle="Contracts with versioned amendments, effective-dated rate cards, payment terms and critical dates. Each active contract carries the project code(s) it issued."
+        actions={
+          <Button variant="primary" icon={<FileSignature size={15} />} disabled={!awaiting} onClick={() => awaiting && setRegister(awaiting)} title={awaiting ? undefined : 'No won opportunity is waiting for a contract'}>
+            Register contract{awaiting ? ` (${awaiting.id})` : ''}
+          </Button>
+        }
+      />
       <Grid cols={4} className="mb-4">
         <Stat label="Active contracts" value={active.length} sub={`${list.filter((c) => c.status === 'Closed').length} closed · ${list.filter((c) => c.status === 'Pending Approval').length} pending approval`} icon={<FileSignature size={16} />} />
         <Stat label="Active contract value" value={idrShort(active.reduce((s, c) => s + c.value, 0))} sub="Sum of current versions" icon={<Wallet size={16} />} />
@@ -110,6 +126,7 @@ export default function Contracts() {
           </ul>
         </Card>
       </div>
+          {register && <RegisterContractDrawer open onClose={() => setRegister(null)} opportunity={register} />}
     </>
   )
 }

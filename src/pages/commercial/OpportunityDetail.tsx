@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowRight, CheckCircle2, Circle, FileText, Gavel, MessageSquare, Plus, Send, XCircle } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Circle, FileSignature, FileText, Gavel, MessageSquare, Plus, Send, XCircle } from 'lucide-react'
 import {
   Badge, Button, Callout, Card, CardHeader, DataTable, DescList, EmptyState, Grid, Input, PageHeader, ProjectCodeChip, Stepper, StatusBadge, Tabs, cx,
 } from '@/components/ui'
@@ -10,7 +10,8 @@ import { budgetLines } from '@/data/procurement'
 import { ageDays, date, dateTime, daysUntil, idr, idrShort, pct, TODAY_ISO } from '@/lib/format'
 import { useToast } from '@/lib/app-state'
 import { BLTag, MODULE_CRM, Person, TextLink, customerName } from './shared'
-import { oppStore, useContractState, useOpps } from './store'
+import { oppStore, useContractState, useDraftContracts, useOpps } from './store'
+import { RegisterContractDrawer } from './RegisterContractDrawer'
 
 const addDays = (iso: string, n: number) => {
   const d = new Date(iso + 'T00:00:00Z')
@@ -152,8 +153,25 @@ export default function OpportunityDetail() {
 
 function WonFlow({ o }: { o: Opportunity }) {
   const cs = useContractState()
-  const c = getContract(o.contractId)
-  if (!c) return null
+  const drafts = useDraftContracts()
+  const [register, setRegister] = useState(false)
+  const c = getContract(o.contractId) ?? drafts.find((d) => d.contract.id === o.contractId)?.contract
+  if (!c)
+    return (
+      <>
+        <Card className="mb-4 border-amber-300 bg-amber-50/50">
+          <CardHeader
+            title="Won → contract not registered yet"
+            subtitle="The project code is issued from the contract, so the contract is registered first (BDS-01 · BDS-11). Client, scope and value carry over from this opportunity."
+            actions={<Button variant="primary" icon={<FileSignature size={15} />} onClick={() => setRegister(true)}>Register contract</Button>}
+          />
+          <div className="text-sm text-slate-600">
+            Awarded {date(o.stageSince)} · {idrShort(o.value)}. What the contract adds: rate card with effective dates, payment terms, retention and critical dates.
+          </div>
+        </Card>
+        <RegisterContractDrawer open={register} onClose={() => setRegister(false)} opportunity={o} />
+      </>
+    )
   const st = cs[c.id]
   const issued = st?.status === 'Active'
   const box = 'flex min-w-[180px] flex-1 flex-col rounded-lg bg-white p-3 ring-1 ring-slate-200'

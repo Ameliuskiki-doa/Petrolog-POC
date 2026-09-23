@@ -92,6 +92,16 @@ function pendingReviews(): TrackReview[] {
 
 export const opportunities: Opportunity[] = [
   {
+    id: 'OPP-2028-017', title: 'Coal Hauling Extension — Pit 4 Ramp & Overburden', customerId: 'CUS-001', businessLine: 'HL', stage: 'Won', value: 11_400_000_000, probability: 100,
+    ownerId: 'EMP-0011', source: 'Existing client extension', created: '2028-01-09', stageSince: '2028-03-05', expectedClose: '2028-03-05',
+    competitors: ['PT Borneo Haul Perkasa'], comparables: ['HL-2027-014'],
+    reviews: doneReviews('2028-02-12', '2028-02-16', 'EMP-0003', { Commercial: 'Rate must follow the fuel-price clause used in CTR-2027-011; review quarterly.' }),
+    proposals: [
+      { version: 'v1', date: '2028-02-20', status: 'Superseded', ownerId: 'EMP-0011', deadline: '2028-02-22', note: 'Hauling Pit 4 ramp + overburden, IDR 12.1 bn over 14 months', file: 'Pit4-Haul_Proposal_v1.pdf' },
+      { version: 'v2 (BAFO)', date: '2028-03-01', status: 'Accepted', ownerId: 'EMP-0011', deadline: '2028-03-03', note: 'Best and final offer IDR 11.4 bn — tonnage rate IDR 51,200, 30-day term', file: 'Pit4-Haul_BAFO_v2.pdf' },
+    ],
+  },
+  {
     id: 'OPP-2027-044', title: 'Produced Water Treatment Skid — Design & Build', customerId: 'CUS-004', businessLine: 'GS', stage: 'Won', value: 16_900_000_000, probability: 100,
     ownerId: 'EMP-0011', source: 'Tender invitation', created: '2027-08-14', stageSince: '2028-02-22', expectedClose: '2028-02-22', tenderId: 'TDR-2027-019',
     contractId: 'CTR-2028-004', projectCode: 'GS-2028-001', competitors: ['PT Tirta Rekayasa Nusantara', 'PT Envirotek Solusi'], comparables: ['GS-2027-008'],
