@@ -10,6 +10,7 @@ import { date, dateTime, daysUntil, idr, idrShort, num, pct, period, TODAY_ISO }
 import { useToast } from '@/lib/app-state'
 import { BLTag, MODULE_CTR, TextLink, customerName } from './shared'
 import { contractStore, useContractExtras, useContractState, useDraftContracts, useOpps } from './store'
+import { issueProjectFromContract } from '@/lib/newProjects'
 import { thresholdBadge } from './Contracts'
 
 type TabKey = 'overview' | 'rates' | 'payment' | 'projects' | 'corr'
@@ -40,11 +41,14 @@ export default function ContractDetail() {
   const corr = correspondence.filter((k) => k.bound.type === 'contract' && k.bound.id === c.id)
   const items = [...new Set(c.rateCard.map((r) => r.item))]
   const isDraft = drafts.some((d) => d.contract.id === c.id)
+  const pmFor = (bl: typeof c.businessLine) => ({ HL: 'EMP-0003', PS: 'EMP-0004', GS: 'EMP-0005', CORP: 'EMP-0002' })[bl]
   const pending = c.status === 'Pending Approval'
   const issuedNow = !!state.codeIssuedAt
 
   const approve = () => {
     contractStore.set((s) => ({ ...s, [c.id]: { status: 'Active', codeIssuedAt: `${TODAY_ISO}T09:14` } }))
+    // A code with no project record yet (registered this session) opens in Project Control awaiting RAB v1
+    if (!projects.some((x) => x.code === c.projectCode)) issueProjectFromContract(c, pmFor(c.businessLine), opp?.id)
     toast(`${c.id} approved — project code ${c.projectCode} issued automatically, inheriting rate card and period ${date(c.start)} – ${date(c.end)}`, 'success')
   }
 
@@ -70,7 +74,7 @@ export default function ContractDetail() {
           <Callout tone="green" icon={<CheckCircle2 size={18} />} title={`Contract approved · project code ${c.projectCode} issued ${dateTime(state.codeIssuedAt!)}`}>
             Rate card and period inherited. The code is now open for requisitions, jobs, timesheets and billing.{' '}
             {isDraft ? (
-              <span className="text-emerald-800">Its P/L opens in Project Control once the first RAB version is approved.</span>
+              <TextLink to={`/projects/${c.projectCode}`} mono={false}>Prepare RAB v1 for {c.projectCode} →</TextLink>
             ) : (
               <TextLink to={`/projects/${c.projectCode}`} mono={false}>Open project {c.projectCode} →</TextLink>
             )}

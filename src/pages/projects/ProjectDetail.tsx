@@ -9,12 +9,17 @@ import { useToast } from '@/lib/app-state'
 import { BLTag, BudgetBar, MODULE, PersonCell } from './shared'
 import { AllocationsTab, CommitmentsTab, LedgerTab, OverviewTab, RabTab, StructureTab } from './ProjectTabs'
 import { GenPoolView } from './GenPoolView'
+import { PrepareRab } from './PrepareRab'
+import { useNewProjects } from '@/lib/newProjects'
 
 export type DetailTab = 'overview' | 'rab' | 'commitments' | 'ledger' | 'allocations' | 'structure'
 
 export default function ProjectDetail() {
   const { code = '' } = useParams()
-  const p = getProject(code)
+  const issued = useNewProjects().find((n) => n.project.code === code)
+  const p = getProject(code) ?? issued?.project
+  // A code issued this session has no transactions yet: it stays on the RAB screen, which also shows the approved budget
+  if (issued) return <PrepareRab n={issued} />
   if (!p)
     return (
       <Card>

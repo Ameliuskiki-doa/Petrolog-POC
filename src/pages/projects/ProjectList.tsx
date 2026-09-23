@@ -16,6 +16,7 @@ import {
   type ProjectStatus,
 } from '@/data/core'
 import { businessLineRollup, genPoolSummary, type PLRow } from '@/data/projects'
+import { useNewProjects } from '@/lib/newProjects'
 import { Button, Callout, Card, CardHeader, Grid, Modal, PageHeader, ProjectCodeChip, SearchInput, Select, Stat, StatusBadge, Stepper, Tabs, cx } from '@/components/ui'
 import { idrShort, pct, date } from '@/lib/format'
 import { ChartTooltip, GRID, Legend, axisProps } from '@/lib/chart'
@@ -29,11 +30,14 @@ const isGen = (p: Project) => p.code.startsWith('GEN')
 const margin = (r: PLRow) => (r.revenue ? ((r.revenue - r.actual) / r.revenue) * 100 : 0)
 
 export default function ProjectList() {
+  // Codes issued from a contract approved in this session appear alongside the seeded ones
+  const issued = useNewProjects().map((n) => n.project)
+  const all = useMemo(() => [...issued, ...projects], [issued])
   const [tab, setTab] = useState<TabKey>('registry')
   const [newOpen, setNewOpen] = useState(false)
   const toast = useToast()
-  const roots = projects.filter((p) => !p.parent && !isGen(p))
-  const gens = projects.filter(isGen)
+  const roots = all.filter((p) => !p.parent && !isGen(p))
+  const gens = all.filter(isGen)
   const tot = roots.reduce(
     (a, p) => ({ cv: a.cv + (p.status !== 'Closed' ? p.contractValue : 0), rev: a.rev + p.revenue, act: a.act + p.actual, com: a.com + p.committed, rab: a.rab + p.rab }),
     { cv: 0, rev: 0, act: 0, com: 0, rab: 0 },
@@ -69,7 +73,7 @@ export default function ProjectList() {
 
       <Tabs<TabKey>
         tabs={[
-          { key: 'registry', label: 'Project code registry', count: projects.length - gens.length },
+          { key: 'registry', label: 'Project code registry', count: all.length - gens.length },
           { key: 'gen', label: 'Overhead codes (GEN)', count: gens.length },
           { key: 'rollup', label: 'P/L roll-up: project → business line → company' },
         ]}
@@ -77,7 +81,7 @@ export default function ProjectList() {
         onChange={setTab}
       />
 
-      {tab === 'registry' && <Registry />}
+      {tab === 'registry' && <Registry all={all} />}
       {tab === 'gen' && <GenCodes codes={gens} />}
       {tab === 'rollup' && <Rollup />}
 
@@ -87,7 +91,7 @@ export default function ProjectList() {
 }
 
 // ─── Registry ────────────────────────────────────────────────────────────────
-function Registry() {
+function Registry({ all }: { all: Project[] }) {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const [bl, setBl] = useState<BusinessLine | ''>('')
@@ -101,7 +105,7 @@ function Registry() {
 
   const rows = useMemo(() => {
     const out: { p: Project; depth: number; hasKids: boolean }[] = []
-    for (const r of projects.filter((p) => !p.parent && !isGen(p))) {
+    for (const r of all.filter((p) => !p.parent && !isGen(p))) {
       const kids = childProjects(r.code)
       const kidMatches = kids.filter(matches)
       if (!matches(r) && !kidMatches.length) continue
