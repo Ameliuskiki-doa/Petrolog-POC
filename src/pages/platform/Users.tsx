@@ -35,12 +35,12 @@ export default function Users() {
         module="Platform · Identity & Access Management"
         title="Users & Access"
         subtitle="Single sign-on through the central identity provider (OIDC), role-based access with data scoping by business line and location, MFA on privileged roles, and Segregation of Duties enforced at role assignment."
-        actions={<Button variant="primary" icon={<Plus size={15} />} onClick={() => toast('Users are provisioned from Mekari Talenta via SCIM — new joiners appear automatically', 'info')}>Invite user</Button>}
+        actions={<Button variant="primary" icon={<Plus size={15} />} onClick={() => toast('Users are created from the personnel master — a new joiner gets access once their role is assigned', 'info')}>Invite user</Button>}
       />
       <Grid cols={4} className="mb-5">
         <Stat label="Active users" value={users.filter((u) => u.status === 'Active').length + 118} sub="Back office 46 · field mobile 87" icon={<UserCog size={16} />} />
         <Stat label="Privileged users with MFA" value={`${privileged.filter((u) => u.mfa === 'Enforced').length}/${privileged.length}`} sub="Enforced for finance, admin, approvals" tone="good" icon={<Fingerprint size={16} />} />
-        <Stat label="SSO coverage" value="100%" sub="Web, mobile app & Talenta via one IdP" tone="good" icon={<KeyRound size={16} />} />
+        <Stat label="SSO coverage" value="100%" sub="Web, mobile app & vendor portal via one IdP" tone="good" icon={<KeyRound size={16} />} />
         <Stat label="SoD rejections (30 d)" value={rejections} sub={`${sodRules.length} conflict rules active`} tone="warn" icon={<ShieldAlert size={16} />} />
       </Grid>
       <Tabs<TabKey>
@@ -123,16 +123,16 @@ export default function Users() {
       {tab === 'sso' && (
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
-            <CardHeader title="Identity provider" subtitle="One login across the platform, mobile app and HRIS" />
+            <CardHeader title="Identity provider" subtitle="One login across the platform, the field mobile app and the vendor portal" />
             <DescList cols={2} items={[
               { label: 'Protocol', value: 'OpenID Connect (authorization code + PKCE)' },
-              { label: 'Provisioning', value: 'SCIM 2.0 from Mekari Talenta' },
+              { label: 'Provisioning', value: 'From the personnel master (MDM)' },
               { label: 'Issuer', value: <Mono>https://id.petrolog.co.id/realms/erp</Mono> },
               { label: 'Clients', value: 'erp-web · erp-mobile · vendor-portal (separate realm)' },
-              { label: 'Account lifecycle', value: 'Follows Talenta employment status — leavers disabled within 15 min' },
+              { label: 'Account lifecycle', value: 'Follows employment status — leavers disabled the same day' },
               { label: 'Session', value: 'Web 8 h idle 30 min · mobile 14 days offline token' },
             ]} />
-            <div className="mt-4 flex items-center gap-2 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800"><Link2 size={15} /> Mekari Talenta SSO linked — employees open Talenta from the ERP without re-login.</div>
+            <div className="mt-4 flex items-center gap-2 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800"><Link2 size={15} /> One company identity: the same sign-in covers the web platform, the field mobile app and the vendor portal.</div>
           </Card>
           <Card>
             <CardHeader title="MFA policy" />

@@ -82,7 +82,7 @@ export default function Incidents() {
         <Stat label="Days without LTI" value={-daysUntil(LAST_LTI)} sub="Last LTI 21 Nov 2027 (INC-2027-114)" tone="good" icon={<CalendarCheck2 size={16} />} />
         <Stat label="LTIFR (rolling 12 m)" value={ltifr.toFixed(2)} sub="per 1,000,000 man-hours · target < 1.0" tone={ltifr < 1 ? 'good' : 'warn'} icon={<HeartPulse size={16} />} />
         <Stat label="TRIR (rolling 12 m)" value={trir.toFixed(2)} sub="per 200,000 man-hours · target < 1.0" tone={trir < 1 ? 'good' : 'warn'} />
-        <Stat label="Man-hours (12 m)" value={num(mh)} sub="From Mekari Talenta timesheets" />
+        <Stat label="Man-hours (12 m)" value={num(mh)} sub="From approved timesheets" />
         <Stat label="Open CAPA" value={openCapa.length} sub={`${overdueCapa.length} overdue`} tone={overdueCapa.length ? 'bad' : 'good'} icon={<ShieldAlert size={16} />} />
       </Grid>
 

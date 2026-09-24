@@ -40,8 +40,8 @@ export default function Timesheets() {
       rs.map((t) =>
         target.some((x) => x.id === t.id)
           ? step === 'supervisor'
-            ? { ...t, status: 'Supervisor Approved', deadline: '2028-03-12', talenta: 'Pending' }
-            : { ...t, status: 'Approved', talenta: 'Synced' }
+            ? { ...t, status: 'Supervisor Approved', deadline: '2028-03-12', payroll: 'Pending' }
+            : { ...t, status: 'Approved', payroll: 'Charged' }
           : t,
       ),
     )
@@ -49,14 +49,14 @@ export default function Timesheets() {
     toast(
       step === 'supervisor'
         ? `${target.length} entries approved by field supervisor → forwarded to ops admin`
-        : `${target.length} entries approved by ops admin — ${num(target.reduce((a, t) => a + t.hours, 0), 1)} h synced to Mekari Talenta and eligible for payroll charging`,
+        : `${target.length} entries approved by ops admin — ${num(target.reduce((a, t) => a + t.hours, 0), 1)} h released for payroll charging to their project codes`,
       'success',
     )
   }
   const reject = (ids: string[]) => {
     const target = rows.filter((t) => ids.includes(t.id) && actionable(t))
     if (!target.length) return
-    setRows((rs) => rs.map((t) => (target.some((x) => x.id === t.id) ? { ...t, status: 'Rejected', talenta: 'Not sent' } : t)))
+    setRows((rs) => rs.map((t) => (target.some((x) => x.id === t.id) ? { ...t, status: 'Rejected', payroll: 'Not released' } : t)))
     setSel(new Set())
     toast(`${target.length} entries returned to the employee for correction`, 'warning')
   }
@@ -64,7 +64,7 @@ export default function Timesheets() {
   const pendSup = rows.filter((t) => t.status === 'Submitted')
   const pendAdm = rows.filter((t) => t.status === 'Supervisor Approved')
   const od = rows.filter(overdue)
-  const syncErr = rows.filter((t) => t.talenta === 'Error')
+  const syncErr = rows.filter((t) => t.payroll === 'Held')
   const hoursByCat = hourCategories.map((c) => ({ cat: c.key, h: filtered.filter((t) => t.category === c.key).reduce((a, t) => a + t.hours, 0) }))
   const selectable = filtered.filter(actionable)
   const allSel = selectable.length > 0 && selectable.every((t) => sel.has(t.id))
@@ -107,9 +107,9 @@ export default function Timesheets() {
         ),
     },
     {
-      key: 'tal',
-      header: 'Talenta',
-      render: (t) => <Badge tone={t.talenta === 'Synced' ? 'green' : t.talenta === 'Error' ? 'red' : t.talenta === 'Pending' ? 'amber' : 'slate'}>{t.talenta}</Badge>,
+      key: 'pay',
+      header: 'Payroll charging',
+      render: (t) => <Badge tone={t.payroll === 'Charged' ? 'green' : t.payroll === 'Held' ? 'red' : t.payroll === 'Pending' ? 'amber' : 'slate'}>{t.payroll}</Badge>,
     },
   ]
 
@@ -118,7 +118,7 @@ export default function Timesheets() {
       <PageHeader
         module={TS_MODULE}
         title="Timesheets"
-        subtitle="Daily entry per person with project code allocation, from web and the field mobile app. Two-level approval — field supervisor, then operations admin — with deadlines and automatic escalation. Mekari Talenta remains the HR system of record."
+        subtitle="Daily entry per person with project code allocation, from web and the field mobile app. Two-level approval — field supervisor, then operations admin — with deadlines and automatic escalation."
         crumbs={[{ label: 'Operations' }, { label: 'Timesheets' }]}
         actions={
           <div className="flex items-center rounded-lg border border-slate-300 bg-white p-0.5 text-xs">
@@ -136,9 +136,9 @@ export default function Timesheets() {
         <Stat label="Awaiting ops admin" value={pendAdm.length} sub={`${num(pendAdm.reduce((a, t) => a + t.hours, 0), 1)} h`} tone={pendAdm.length ? 'warn' : 'good'} />
         <Stat label="Overdue → escalated" value={od.length} sub="Past approval deadline; escalated to project manager" tone={od.length ? 'bad' : 'good'} icon={<AlertTriangle size={16} />} />
         <Stat
-          label="Mekari Talenta sync"
-          value={`${rows.filter((t) => t.talenta === 'Synced').length} synced`}
-          sub={syncErr.length ? `${syncErr.length} error(s) — employee ID mismatch` : 'All approved entries synced'}
+          label="Released for payroll charging"
+          value={`${rows.filter((t) => t.payroll === 'Charged').length} entries`}
+          sub={syncErr.length ? `${syncErr.length} held — no valid project code allocation` : 'All approved entries charged to their project codes'}
           tone={syncErr.length ? 'bad' : 'good'}
         />
       </Grid>
@@ -157,27 +157,27 @@ export default function Timesheets() {
         </Card>
         <Card>
           <CardHeader
-            title="Integration — Mekari Talenta"
+            title="Payroll charging (HC-04)"
             actions={
               syncErr.length > 0 && (
                 <Button
                   size="sm"
                   icon={<RefreshCw size={13} />}
                   onClick={() => {
-                    setRows((rs) => rs.map((t) => (t.talenta === 'Error' ? { ...t, talenta: 'Synced' } : t)))
-                    toast(`${syncErr.length} entries re-sent to Talenta — accepted`, 'success')
+                    setRows((rs) => rs.map((t) => (t.payroll === 'Held' ? { ...t, payroll: 'Charged' } : t)))
+                    toast(`${syncErr.length} held entries resolved — hours charged to their project codes`, 'success')
                   }}
                 >
-                  Retry errors
+                  Resolve held
                 </Button>
               )
             }
           />
           <div className="space-y-1.5 text-xs text-slate-600">
-            <div className="flex justify-between"><span>Direction</span><span className="font-medium text-slate-800">ERP → Talenta (approved hours)</span></div>
-            <div className="flex justify-between"><span>Employee master</span><span className="font-medium text-slate-800">Talenta → ERP, nightly</span></div>
-            <div className="flex justify-between"><span>Last sync</span><span className="font-medium text-slate-800">10 Mar 2028, 08:45</span></div>
-            <div className="flex justify-between"><span>Errors</span><span className={cx('font-medium', syncErr.length ? 'text-red-600' : 'text-emerald-600')}>{syncErr.length}</span></div>
+            <div className="flex justify-between"><span>Labour cost</span><span className="font-medium text-slate-800">Approved hours × rate → project code</span></div>
+            <div className="flex justify-between"><span>Payroll result</span><span className="font-medium text-slate-800">Monthly file from the payroll bureau</span></div>
+            <div className="flex justify-between"><span>Last charge run</span><span className="font-medium text-slate-800">10 Mar 2028, 08:45</span></div>
+            <div className="flex justify-between"><span>Held</span><span className={cx('font-medium', syncErr.length ? 'text-red-600' : 'text-emerald-600')}>{syncErr.length}</span></div>
           </div>
         </Card>
       </div>

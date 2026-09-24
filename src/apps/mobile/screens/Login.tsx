@@ -35,7 +35,7 @@ export default function Login() {
         </div>
         <div className="flex-1 px-5 pt-6">
           <h1 className="text-[22px] font-extrabold">Choose your account</h1>
-          <p className="mt-1 text-[14px] text-slate-600">One company identity for the field app, HRIS and back office. No separate app password.</p>
+          <p className="mt-1 text-[14px] text-slate-600">One company identity for the field app and the back office. No separate app password.</p>
           <div className="mt-5 flex items-center gap-3 rounded-2xl border-2 border-ink-900 bg-slate-50 p-4">
             <Avatar name="Eko Prasetya" size={48} />
             <div className="min-w-0">

@@ -16,7 +16,7 @@ function rng(seed: number) {
   }
 }
 
-// ─── Additional field personnel (outsourced drivers held in Talenta) ─────────
+// ─── Additional field personnel (outsourced drivers) ─────────────────────────
 export const opsEmployees: Employee[] = [
   { id: 'EMP-0031', name: 'Sugeng Widodo', position: 'Dump Truck Driver', department: 'Operations', location: 'Kutai Kartanegara', type: 'Direct', licence: { kind: 'SIM B2 Umum', number: 'B2U-6471-1502', expiry: '2029-03-30' } },
   { id: 'EMP-0032', name: 'Irfan Maulana', position: 'Dump Truck Driver', department: 'Operations', location: 'Kutai Kartanegara', type: 'Direct', licence: { kind: 'SIM B2 Umum', number: 'B2U-6471-1618', expiry: '2028-10-17' } },
@@ -245,7 +245,8 @@ export interface TimesheetEntry {
   supervisorId: string
   /** deadline for the current approval step */
   deadline: string
-  talenta: 'Synced' | 'Pending' | 'Error' | 'Not sent'
+  /** Approved hours released to payroll charging (HC-04) */
+  payroll: 'Charged' | 'Pending' | 'Held' | 'Not released'
   note?: string
 }
 
@@ -259,13 +260,13 @@ function buildTimesheets(): TimesheetEntry[] {
   const r = rng(72026)
   const out: TimesheetEntry[] = []
   let n = 5100
-  const push = (e: Omit<TimesheetEntry, 'id' | 'status' | 'deadline' | 'talenta'> & Partial<Pick<TimesheetEntry, 'status'>>) => {
+  const push = (e: Omit<TimesheetEntry, 'id' | 'status' | 'deadline' | 'payroll'> & Partial<Pick<TimesheetEntry, 'status'>>) => {
     const age = (new Date('2028-03-10').getTime() - new Date(e.date).getTime()) / 86400000
     let status: TimesheetStatus = e.status ?? (age >= 3 ? 'Approved' : age === 2 ? (r() < 0.6 ? 'Supervisor Approved' : 'Submitted') : age === 1 ? (r() < 0.25 ? 'Supervisor Approved' : 'Submitted') : r() < 0.15 ? 'Draft' : 'Submitted')
     if (e.hours > 3 && e.category === 'Overtime' && age === 1 && r() < 0.3) status = 'Rejected'
     const deadline = status === 'Submitted' ? addDays(e.date, 1) : status === 'Supervisor Approved' ? addDays(e.date, 3) : addDays(e.date, 3)
-    const talenta = status === 'Approved' ? (r() < 0.06 ? 'Error' : 'Synced') : status === 'Supervisor Approved' ? 'Pending' : 'Not sent'
-    out.push({ ...e, id: `TS-${n++}`, status, deadline, talenta })
+    const payroll = status === 'Approved' ? (r() < 0.06 ? 'Held' : 'Charged') : status === 'Supervisor Approved' ? 'Pending' : 'Not released'
+    out.push({ ...e, id: `TS-${n++}`, status, deadline, payroll })
   }
   const window = allJobs.filter((j) => j.date >= '2028-03-04' && j.date <= '2028-03-10' && j.crewIds.length > 0 && j.status !== 'Planned' && j.status !== 'Draft')
   for (const j of window) {

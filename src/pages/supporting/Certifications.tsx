@@ -457,7 +457,7 @@ function OpDrawer({ cert, onClose, onRenew }: { cert: OperatorCert | null; onClo
         { label: 'Issued', value: date(cert.issued) },
         { label: 'Expiry', value: <span className="flex items-center gap-2">{date(cert.expiry)} <TierBadge expiry={cert.expiry} /></span> },
       ]} />
-      <p className="mt-3 text-xs text-slate-500">Linked to the individual (from the Mekari Talenta employee record), not to a job — it follows the person across projects.</p>
+      <p className="mt-3 text-xs text-slate-500">Linked to the individual (from the personnel master), not to a job — it follows the person across projects.</p>
       {daysUntil(cert.expiry) < 0 && cert.class === 'Licence' && (
         <div className="mt-4"><Callout tone="red" title="Blocked from assignment as operator / driver" icon={<Ban size={16} />}>
           {assigned.length > 0 ? <>Currently listed on {assigned.map((j) => <Link key={j.id} to={`/ops/jobs/${j.id}`} className="mr-1 underline">{j.id}</Link>)} — the site leader has been asked to replace this crew member.</> : 'No open assignments.'}

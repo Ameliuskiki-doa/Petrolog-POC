@@ -115,7 +115,7 @@ export default function Config() {
 
       {tab === 'hours' && (
         <Card padded={false}>
-          <div className="p-4 pb-2"><CardHeader title="Working hour categories" subtitle="Used by timesheets, unit hours and billing; payroll multipliers go to Mekari Talenta" actions={<Button variant="primary" size="sm" icon={<Save size={13} />} onClick={() => save('Working hour categories')}>Save</Button>} /></div>
+          <div className="p-4 pb-2"><CardHeader title="Working hour categories" subtitle="Used by timesheets, unit hours and billing; payroll multipliers feed the monthly payroll charge" actions={<Button variant="primary" size="sm" icon={<Save size={13} />} onClick={() => save('Working hour categories')}>Save</Button>} /></div>
           <DataTable
             rows={workingHourCategories}
             rowKey={(w) => w.code}

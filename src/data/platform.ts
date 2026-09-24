@@ -23,7 +23,7 @@ export const mdmEntities: MdmEntity[] = [
   { key: 'customer', name: 'Customers', records: 38, identifier: 'NPWP', steward: 'EMP-0011', source: 'CRM (M1) on contract award', completeness: 99.1, duplicatesOpen: 1, pendingChanges: 1, lastChange: '2028-03-07T15:40' },
   { key: 'item', name: 'Items & spare parts', records: 3_184, identifier: 'OEM part number + manufacturer', steward: 'EMP-0012', source: 'Migrated from SAP B1 item master; new items via request', completeness: 91.8, duplicatesOpen: 7, pendingChanges: 4, lastChange: '2028-03-09T11:05' },
   { key: 'unit', name: 'Units (fleet & equipment)', records: 187, identifier: 'Chassis / serial number', steward: 'EMP-0012', source: 'Fixed asset register (M11)', completeness: 98.9, duplicatesOpen: 0, pendingChanges: 1, lastChange: '2028-03-06T09:30' },
-  { key: 'employee', name: 'Employees', records: 624, identifier: 'NIK (KTP)', steward: 'EMP-0027', source: 'Mekari Talenta (system of record) — read only here', completeness: 100, duplicatesOpen: 0, pendingChanges: 0, lastChange: '2028-03-10T02:00' },
+  { key: 'employee', name: 'Employees', records: 624, identifier: 'NIK (KTP)', steward: 'EMP-0027', source: 'Personnel master — golden record maintained here', completeness: 100, duplicatesOpen: 0, pendingChanges: 0, lastChange: '2028-03-10T02:00' },
   { key: 'coa', name: 'Chart of accounts', records: 486, identifier: 'Account code', steward: 'EMP-0028', source: 'Designed at Stage 1B; dimensional (BL · location · project code)', completeness: 100, duplicatesOpen: 0, pendingChanges: 1, lastChange: '2028-02-27T16:20' },
   { key: 'project', name: 'Project codes', records: 164, identifier: 'Project code (BL-YYYY-NNN[.NN])', steward: 'EMP-0028', source: 'Issued from contract award (M2); GEN codes by Finance', completeness: 100, duplicatesOpen: 0, pendingChanges: 2, lastChange: '2028-03-08T10:45' },
 ]
@@ -237,10 +237,10 @@ export interface Connector {
 }
 
 export const connectors: Connector[] = [
-  { id: 'CON-TAL', name: 'Mekari Talenta', system: 'HRIS (system of record for employees, payroll)', direction: 'Inbound', mechanism: 'Scheduled REST API · every 30 min', status: 'Healthy', lastSync: '2028-03-10T08:30', throughput24h: 4_812, errors24h: 0, latencyMs: 420, since: 'Stage 1A', notes: 'Employees, attendance, payroll results by project code' },
+  { id: 'CON-PAY', name: 'Payroll bureau', system: 'Monthly payroll result file (Outsource Indonesia)', direction: 'Inbound', mechanism: 'Secure file drop · monthly', status: 'Healthy', lastSync: '2028-03-10T08:30', throughput24h: 4_812, errors24h: 0, latencyMs: 420, since: 'Stage 1A', notes: 'Employees, attendance, payroll results by project code' },
   { id: 'CON-GPS', name: 'GPS & dashcam telematics', system: 'Fleet telematics provider (A-02)', direction: 'Inbound', mechanism: 'Device API · streaming (1 min)', status: 'Healthy', lastSync: '2028-03-10T08:59', throughput24h: 268_440, errors24h: 14, latencyMs: 180, since: 'Stage 1A', notes: 'Position, odometer, engine hours, harsh events, video clips' },
   { id: 'CON-FUEL', name: 'Fuel stick sensors (via GPS)', system: 'Tank level sensors', direction: 'Inbound', mechanism: 'Device API · 5 min', status: 'Degraded', lastSync: '2028-03-10T08:10', throughput24h: 5_904, errors24h: 212, latencyMs: 2_400, since: 'Stage 1A', notes: '3 units offline in Pit 3 blind spot — readings backfilled on reconnect' },
-  { id: 'CON-IDP', name: 'Identity provider', system: 'OIDC / SAML IdP (SSO incl. Talenta & mobile)', direction: 'Bidirectional', mechanism: 'OIDC · SCIM provisioning', status: 'Healthy', lastSync: '2028-03-10T08:58', throughput24h: 1_906, errors24h: 3, latencyMs: 95, since: 'Stage 1A', notes: 'Account lifecycle follows Talenta employment status' },
+  { id: 'CON-IDP', name: 'Identity provider', system: 'OIDC / SAML IdP (SSO for web, mobile & vendor portal)', direction: 'Bidirectional', mechanism: 'OIDC · SCIM provisioning', status: 'Healthy', lastSync: '2028-03-10T08:58', throughput24h: 1_906, errors24h: 3, latencyMs: 95, since: 'Stage 1A', notes: 'Account lifecycle follows employment status in the personnel master' },
   { id: 'CON-EFK', name: 'e-Faktur / Coretax', system: 'DJP tax authority', direction: 'Bidirectional', mechanism: 'Coretax API (PJAP)', status: 'Healthy', lastSync: '2028-03-10T08:40', throughput24h: 64, errors24h: 1, latencyMs: 1_350, since: 'Stage 1B (1 Jan 2028)', notes: 'Output VAT upload, NSFP, input VAT validation' },
   { id: 'CON-BPT', name: 'e-Bupot Unifikasi', system: 'DJP tax authority', direction: 'Bidirectional', mechanism: 'Coretax API (PJAP)', status: 'Healthy', lastSync: '2028-03-10T07:15', throughput24h: 38, errors24h: 0, latencyMs: 1_120, since: 'Stage 1B (1 Jan 2028)', notes: 'PPh 23 / PPh 4(2) withholding slips' },
   { id: 'CON-H2H', name: 'Bank host-to-host', system: 'Bank Mandiri & BNI', direction: 'Bidirectional', mechanism: 'H2H SFTP (ISO 20022 pain.001 / camt.053)', status: 'Down', lastSync: '2028-03-10T06:02', throughput24h: 212, errors24h: 4, latencyMs: 0, since: 'Stage 1B (1 Jan 2028)', notes: 'BNI SFTP certificate rotation pending — statements queued, Mandiri OK' },
@@ -267,7 +267,7 @@ export const outboxEvents: OutboxEvent[] = [
   { id: 'EVT-8841190', topic: 'po.approved', aggregate: 'PO-2028-0187', created: '2028-03-10T08:44:19', status: 'Delivered', attempts: 1, consumer: 'vendor-portal.notifier', idempotencyKey: 'po.approved:PO-2028-0187:v2' },
   { id: 'EVT-8841188', topic: 'fuel.reading.received', aggregate: 'TNK-KTI-01', created: '2028-03-10T08:40:02', status: 'Pending', attempts: 0, consumer: 'fuel.reconciler', idempotencyKey: 'fuel:TNK-KTI-01:20280310T0840' },
   { id: 'EVT-8840977', topic: 'invoice.issued', aggregate: 'INV-2028-0092', created: '2028-03-09T16:20:31', status: 'Dead-letter', attempts: 8, consumer: 'tax.efaktur-upload', error: 'Coretax 422: NPWP pembeli tidak valid (buyer NPWP format — 15 vs 16 digit)', idempotencyKey: 'invoice.issued:INV-2028-0092' },
-  { id: 'EVT-8840612', topic: 'timesheet.approved', aggregate: 'TS-2028-W10-0412', created: '2028-03-09T11:05:12', status: 'Dead-letter', attempts: 8, consumer: 'hris.talenta-push', error: 'Talenta 404: employee EMP-0031 not found (joined 08 Mar, not yet synced)', idempotencyKey: 'ts.approved:TS-2028-W10-0412' },
+  { id: 'EVT-8840612', topic: 'timesheet.approved', aggregate: 'TS-2028-W10-0412', created: '2028-03-09T11:05:12', status: 'Dead-letter', attempts: 8, consumer: 'payroll.bureau-export', error: 'Bureau file endpoint 404: employee EMP-0031 not found (joined 08 Mar, not yet synced)', idempotencyKey: 'ts.approved:TS-2028-W10-0412' },
   { id: 'EVT-8840533', topic: 'payment.instruction.created', aggregate: 'PAY-2028-0306', created: '2028-03-09T09:12:00', status: 'Dead-letter', attempts: 8, consumer: 'bank.h2h-bni', error: 'SFTP auth failed: host key changed', idempotencyKey: 'pay:PAY-2028-0306' },
 ]
 
@@ -369,7 +369,7 @@ export const allocationDrivers = [
   { pool: 'GEN-HO', driver: 'Revenue share (month)', basis: 'Recognised revenue by project code', frequency: 'Monthly', status: 'Active' },
   { pool: 'GEN-BPN', driver: 'Unit operating hours', basis: 'Telematics engine hours by project code', frequency: 'Monthly', status: 'Active' },
   { pool: 'GEN-BPN · workshop', driver: 'Work order labour hours', basis: 'M15 labour booked by project code', frequency: 'Monthly', status: 'Active' },
-  { pool: 'GEN-HO · IT', driver: 'Headcount', basis: 'Talenta headcount by business line', frequency: 'Quarterly', status: 'Draft' },
+  { pool: 'GEN-HO · IT', driver: 'Headcount', basis: 'Headcount from approved timesheets, by business line', frequency: 'Quarterly', status: 'Draft' },
 ]
 
 export const workingHourCategories = [
